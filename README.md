@@ -1,3 +1,18 @@
 # User Authentication System
 
-Spring Boot authentication system with JWT and role-based access.
+A Spring Boot based authentication system implementing:
+
+- User registration
+- User login
+- BCrypt password encryption
+- JWT authentication
+- Role-based access control
+
+## Tech Stack
+
+- Java
+- Spring Boot
+- Spring Security
+- JWT
+- Maven
+- MySQL

@@ -1,0 +1,38 @@
+spring:
+  application:
+    name: auth-system
+
+  datasource:
+    # URL includes parameters to automatically create the database if it doesn't exist
+    url: jdbc:mysql://localhost:3306/auth_system?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: root
+    password: 
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    database-platform: org.hibernate.dialect.MySQLDialect
+    # 'update' automatically updates the schema on startup, which is excellent for local development and testing.
+    # For production environments, it is recommended to set this to 'validate' and use a migration tool like Flyway.
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  # Ensure Jackson formats output dates cleanly in ISO-8601
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
+server:
+  port: 8080
+  error:
+    include-message: always # Ensure detailed validation error messages are sent
+
+# Production logging settings: Do not log SQL bind parameters or sensitive authorization details
+logging:
+  level:
+    root: INFO
+    org.springframework.security: INFO
+    org.hibernate.SQL: INFO
