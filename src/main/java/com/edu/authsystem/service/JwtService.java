@@ -48,7 +48,7 @@ public class JwtService {
         if (secretKeyString == null || secretKeyString.trim().isEmpty()) {
             throw new IllegalStateException("JWT signing secret is mandatory. Configure the JWT_SECRET environment variable.");
         }
-        if (activeProfile.contains("prod") && secretKeyString.contains("default-local-dev")) {
+        if (activeProfile != null && activeProfile.contains("prod") && secretKeyString.contains("default-local-dev")) {
             throw new IllegalStateException("Insecure development JWT secret cannot be used in production.");
         }
         byte[] keyBytes = secretKeyString.getBytes(StandardCharsets.UTF_8);

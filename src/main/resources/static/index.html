@@ -336,6 +336,15 @@
           <div id="demoTokenDisplay" class="token-box" style="margin-bottom: 12px;"></div>
           <button id="verifyTokenBtn" class="btn btn-success" style="font-size: 0.85rem;" onclick="triggerVerification()">Click to Verify Email & Unlock Account</button>
         </div>
+
+        <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--surface-border);">
+          <h3 style="font-size: 0.95rem; margin-bottom: 8px;">Token Verification Form</h3>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px;">Enter an account verification token received via email or testing:</p>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="manualVerifyTokenInput" placeholder="Enter token (UUID)">
+            <button type="button" class="btn btn-secondary" style="white-space: nowrap;" onclick="triggerManualVerification()">Verify Token</button>
+          </div>
+        </div>
       </section>
 
       <!-- TAB 3: LOGIN -->
@@ -583,6 +592,21 @@
         if (res.ok) {
           document.getElementById('verificationDemoBox').innerHTML = `<span style="color: var(--success); font-weight: 600;">✓ Email verified successfully! You may now proceed to Login.</span>`;
         }
+      } catch (err) {
+        logApi('GET', `/api/auth/verify-email`, 500, { error: err.message });
+      }
+    }
+
+    async function triggerManualVerification() {
+      const token = document.getElementById('manualVerifyTokenInput').value.trim();
+      if (!token) {
+        alert('Please enter a verification token.');
+        return;
+      }
+      try {
+        const res = await fetch(`/api/auth/verify-email?token=${encodeURIComponent(token)}`);
+        const data = await res.json();
+        logApi('GET', `/api/auth/verify-email`, res.status, data);
       } catch (err) {
         logApi('GET', `/api/auth/verify-email`, 500, { error: err.message });
       }

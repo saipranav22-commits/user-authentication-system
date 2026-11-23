@@ -25,6 +25,4 @@ services:
       - key: JWT_EXPIRATION_MS
         value: 900000
       - key: APP_DEMO_MODE
-        value: "true"
-      - key: CORS_ALLOWED_ORIGINS
-        value: "*"
+        value: "false"

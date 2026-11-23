@@ -13,9 +13,10 @@ Write-Host "Copying essential dependencies to target/lib..."
 # 2. Define essential package keywords (Including jjwt- and jackson)
 $keywords = @("spring-", "jakarta.", "mysql-", "slf4j-", "mockito-", "junit-", "byte-buddy", "objenesis", "reactive-streams", "jjwt-", "jackson")
 
-# 3. Search and copy essential dependencies (excluding duplicates of older versions)
+# 3. Search and copy essential dependencies (excluding duplicates of older or incompatible versions)
 Get-ChildItem -Path $m2Repo -Filter "*.jar" -Recurse | Where-Object {
     $fullName = $_.FullName
+    if ($fullName.Contains("0.12.") -or $fullName.Contains("7.0.")) { return $false }
     $match = $false
     foreach ($keyword in $keywords) {
         if ($fullName.Contains($keyword)) { $match = $true; break }

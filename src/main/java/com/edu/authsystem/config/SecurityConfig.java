@@ -31,7 +31,7 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    @Value("${app.cors.allowed-origins:*}")
+    @Value("${app.cors.allowed-origins:}")
     private String allowedOrigins;
 
     @Autowired
@@ -48,19 +48,23 @@ public class SecurityConfig {
     }
 
     /**
-     * CORS configuration source allowing safe frontend and cross-origin access.
+     * CORS configuration source.
+     * Restrictive by default: same-origin access requires no CORS headers.
+     * Only explicitly configured non-wildcard domains in app.cors.allowed-origins are permitted.
      */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        List<String> origins = Arrays.asList(allowedOrigins.split(","));
         
-        if (origins.contains("*")) {
-            configuration.addAllowedOriginPattern("*");
-            configuration.setAllowCredentials(false);
-        } else {
-            configuration.setAllowedOrigins(origins);
-            configuration.setAllowCredentials(true);
+        if (allowedOrigins != null && !allowedOrigins.trim().isEmpty()) {
+            List<String> origins = Arrays.stream(allowedOrigins.split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty() && !s.equals("*"))
+                    .toList();
+            if (!origins.isEmpty()) {
+                configuration.setAllowedOrigins(origins);
+                configuration.setAllowCredentials(true);
+            }
         }
         
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"));

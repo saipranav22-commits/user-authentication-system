@@ -35,10 +35,11 @@ security:
     expiration-ms: ${JWT_EXPIRATION_MS:900000}
 
 app:
-  # Demo mode allows self-verification link access without requiring external paid SMTP
-  demo-mode: ${APP_DEMO_MODE:true}
+  # Demo mode disabled by default; set to true explicitly if token inspection is needed for local development
+  demo-mode: ${APP_DEMO_MODE:false}
   cors:
-    allowed-origins: ${CORS_ALLOWED_ORIGINS:*}
+    # Restrictive CORS: empty by default because frontend is served on the same origin
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:}
 
 # Production logging settings: Do not log SQL bind parameters or sensitive authorization details
 logging:

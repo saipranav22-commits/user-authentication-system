@@ -1,8 +1,8 @@
 # Multi-stage Dockerfile for User Authentication System
-# Optimized for Render Free Tier (512MB RAM limits)
+# Java 21 LTS runtime optimized for Render Free Tier (512MB RAM limits)
 
-# Stage 1: Build application JAR
-FROM eclipse-temurin:23-jdk-alpine AS builder
+# Stage 1: Build application JAR with Java 21 LTS
+FROM eclipse-temurin:21-jdk-alpine AS builder
 WORKDIR /app
 
 # Copy Maven wrapper and POM for dependency pre-caching
@@ -14,8 +14,8 @@ RUN chmod +x mvnw && ./mvnw dependency:go-offline -B || true
 COPY src ./src
 RUN ./mvnw clean package -DskipTests
 
-# Stage 2: Minimal production runtime image
-FROM eclipse-temurin:23-jre-alpine
+# Stage 2: Minimal production runtime image with Java 21 LTS
+FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
 # Security best practice: Run as non-root user
