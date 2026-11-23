@@ -8,7 +8,7 @@ WORKDIR /app
 # Copy Maven wrapper and POM for dependency pre-caching
 COPY .mvn/ .mvn/
 COPY mvnw pom.xml ./
-RUN chmod +x mvnw && ./mvnw dependency:go-offline -B || true
+RUN chmod +x mvnw && ./mvnw dependency:go-offline -B
 
 # Copy application source and build JAR
 COPY src ./src
