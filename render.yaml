@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: user-authentication-system
+    runtime: docker
+    plan: free
+    region: oregon
+    branch: main
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: SPRING_DATASOURCE_URL
+        sync: false
+      - key: SPRING_DATASOURCE_USERNAME
+        sync: false
+      - key: SPRING_DATASOURCE_PASSWORD
+        sync: false
+      - key: SPRING_DATASOURCE_DRIVER_CLASS_NAME
+        value: org.postgresql.Driver
+      - key: SPRING_JPA_HIBERNATE_DDL_AUTO
+        value: update
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRATION_MS
+        value: 900000
+      - key: APP_DEMO_MODE
+        value: "true"
+      - key: CORS_ALLOWED_ORIGINS
+        value: "*"

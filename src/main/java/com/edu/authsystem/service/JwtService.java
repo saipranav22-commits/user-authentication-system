@@ -5,9 +5,12 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import jakarta.annotation.PostConstruct;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
@@ -25,17 +28,37 @@ import java.util.stream.Collectors;
 @Service
 public class JwtService {
 
-    // Secure base64 or plaintext signing key. Must be at least 256-bits (32 bytes).
-    @Value("${security.jwt.secret-key:default-secure-and-extremely-long-secret-key-32-bytes}")
+    private static final Logger logger = LoggerFactory.getLogger(JwtService.class);
+
+    // Secure signing key from environment (JWT_SECRET) or application property
+    @Value("${security.jwt.secret-key:${JWT_SECRET:}}")
     private String secretKeyString;
 
     // Default expiration is 15 minutes (900,000 milliseconds) for access tokens
-    @Value("${security.jwt.expiration-ms:900000}")
+    @Value("${security.jwt.expiration-ms:${JWT_EXPIRATION_MS:900000}}")
     private long jwtExpirationMs;
 
+    private SecretKey signingKey;
+
+    @PostConstruct
+    public void init() {
+        if (secretKeyString == null || secretKeyString.trim().isEmpty()) {
+            logger.warn("JWT secret key was not provided via environment variable (JWT_SECRET). Initializing secure runtime key.");
+            this.signingKey = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+        } else {
+            byte[] keyBytes = secretKeyString.getBytes(StandardCharsets.UTF_8);
+            if (keyBytes.length < 32) {
+                throw new IllegalStateException("JWT signing key must be at least 256 bits (32 bytes). Configured key length: " + keyBytes.length + " bytes.");
+            }
+            this.signingKey = Keys.hmacShaKeyFor(keyBytes);
+        }
+    }
+
     private SecretKey getSigningKey() {
-        byte[] keyBytes = secretKeyString.getBytes(StandardCharsets.UTF_8);
-        return Keys.hmacShaKeyFor(keyBytes);
+        if (signingKey == null) {
+            init();
+        }
+        return signingKey;
     }
 
     /**

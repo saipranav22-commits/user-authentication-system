@@ -3,22 +3,20 @@ spring:
     name: auth-system
 
   datasource:
-    # URL includes parameters to automatically create the database if it doesn't exist
-    url: jdbc:mysql://localhost:3306/auth_system?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-    username: root
-    password: 
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    # Externalized datasource configuration supporting MySQL, Neon PostgreSQL, and H2
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/auth_system?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+    username: ${SPRING_DATASOURCE_USERNAME:root}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
+    driver-class-name: ${SPRING_DATASOURCE_DRIVER_CLASS_NAME:}
 
   jpa:
-    database-platform: org.hibernate.dialect.MySQLDialect
-    # 'update' automatically updates the schema on startup, which is excellent for local development and testing.
-    # For production environments, it is recommended to set this to 'validate' and use a migration tool like Flyway.
+    # Hibernate automatically selects dialect based on JDBC driver metadata (MySQL / PostgreSQL / H2)
     hibernate:
-      ddl-auto: update
-    show-sql: true
+      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:update}
+    show-sql: false
     properties:
       hibernate:
-        format_sql: true
+        format_sql: false
 
   # Ensure Jackson formats output dates cleanly in ISO-8601
   jackson:
@@ -26,13 +24,25 @@ spring:
       write-dates-as-timestamps: false
 
 server:
-  port: 8080
+  port: ${PORT:8080}
   error:
     include-message: always # Ensure detailed validation error messages are sent
+
+security:
+  jwt:
+    # 256-bit signing key loaded securely from environment variable (SEC-03)
+    secret-key: ${JWT_SECRET:}
+    expiration-ms: ${JWT_EXPIRATION_MS:900000}
+
+app:
+  # Demo mode allows self-verification link access without requiring external paid SMTP
+  demo-mode: ${APP_DEMO_MODE:true}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:*}
 
 # Production logging settings: Do not log SQL bind parameters or sensitive authorization details
 logging:
   level:
     root: INFO
     org.springframework.security: INFO
-    org.hibernate.SQL: INFO
+    org.hibernate.SQL: WARN

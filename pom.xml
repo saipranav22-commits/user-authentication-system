@@ -37,6 +37,13 @@
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
 
+        <!-- PostgreSQL Driver for Neon / Cloud Deployment -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
         <!-- Database Driver (Explicitly set to local cached 9.5.0) -->
         <dependency>
             <groupId>com.mysql</groupId>

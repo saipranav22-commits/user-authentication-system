@@ -41,6 +41,9 @@ public class UserServiceImpl implements UserService {
     private final JwtService jwtService;
     private final EmailService emailService;
 
+    @org.springframework.beans.factory.annotation.Value("${app.demo-mode:true}")
+    private boolean demoMode;
+
     @Autowired
     public UserServiceImpl(UserRepository userRepository,
                            RefreshTokenRepository refreshTokenRepository,
@@ -79,15 +82,22 @@ public class UserServiceImpl implements UserService {
         // 5. Trigger mock email transmission
         emailService.sendVerificationEmail(savedUser.getEmail(), verificationToken);
 
-        return convertToResponse(savedUser);
+        UserResponse response = convertToResponse(savedUser);
+        // Under demo mode, supply verification token in the response object to allow self-verification without external SMTP
+        if (demoMode) {
+            response.setToken(verificationToken);
+        } else {
+            response.setToken(null);
+        }
+        return response;
     }
 
     @Override
     @Transactional
     public AuthResponse loginUser(LoginRequest request) {
-        // 1. Find user in repository
+        // 1. Find user in repository (Mitigate SEC-01 user enumeration: return uniform InvalidCredentialsException)
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new UserNotFoundException(request.getEmail()));
+                .orElseThrow(InvalidCredentialsException::new);
 
         // 2. Validate passwords
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
@@ -198,19 +208,20 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void initiatePasswordReset(PasswordResetRequest request) {
-        // Look up target account
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new UserNotFoundException(request.getEmail()));
+        // Look up target account without leaking account existence (Mitigate SEC-02 user enumeration)
+        Optional<User> userOpt = userRepository.findByEmail(request.getEmail());
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            // Generate secure password reset token (expires in 1 hour)
+            String resetToken = UUID.randomUUID().toString();
+            user.setPasswordResetToken(resetToken);
+            user.setPasswordResetTokenExpiry(LocalDateTime.now().plusHours(1));
 
-        // Generate secure password reset token (expires in 1 hour)
-        String resetToken = UUID.randomUUID().toString();
-        user.setPasswordResetToken(resetToken);
-        user.setPasswordResetTokenExpiry(LocalDateTime.now().plusHours(1));
+            userRepository.save(user);
 
-        userRepository.save(user);
-
-        // Trigger mock recovery email
-        emailService.sendPasswordResetEmail(user.getEmail(), resetToken);
+            // Trigger mock recovery email
+            emailService.sendPasswordResetEmail(user.getEmail(), resetToken);
+        }
     }
 
     @Override

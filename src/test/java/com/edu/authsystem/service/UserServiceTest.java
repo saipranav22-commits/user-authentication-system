@@ -136,11 +136,11 @@ public class UserServiceTest {
 
     @Test
     public void loginUser_UserNotFound_ThrowsException() {
-        // Arrange
+        // Arrange (SEC-01: User enumeration prevention returns InvalidCredentialsException)
         when(userRepository.findByEmail(loginRequest.getEmail())).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThrows(UserNotFoundException.class, () -> userService.loginUser(loginRequest));
+        assertThrows(InvalidCredentialsException.class, () -> userService.loginUser(loginRequest));
         verify(userRepository, times(1)).findByEmail(loginRequest.getEmail());
         verify(passwordEncoder, never()).matches(anyString(), anyString());
     }
@@ -155,5 +155,16 @@ public class UserServiceTest {
         assertThrows(InvalidCredentialsException.class, () -> userService.loginUser(loginRequest));
         verify(userRepository, times(1)).findByEmail(loginRequest.getEmail());
         verify(passwordEncoder, times(1)).matches(loginRequest.getPassword(), user.getPassword());
+    }
+
+    @Test
+    public void initiatePasswordReset_UserNotFound_SilentlyIgnored() {
+        // Arrange (SEC-02: Prevent user enumeration on password reset request)
+        when(userRepository.findByEmail("unknown@example.com")).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertDoesNotThrow(() -> userService.initiatePasswordReset(new com.edu.authsystem.dto.PasswordResetRequest("unknown@example.com")));
+        verify(userRepository, times(1)).findByEmail("unknown@example.com");
+        verify(emailService, never()).sendPasswordResetEmail(anyString(), anyString());
     }
 }

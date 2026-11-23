@@ -1,18 +1,24 @@
 spring:
   datasource:
-    url: jdbc:h2:mem:auth_system;DB_CLOSE_DELAY=-1;MODE=MySQL
+    url: jdbc:h2:mem:auth_system;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
     username: sa
     password: 
     driver-class-name: org.h2.Driver
 
   jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
-      ddl-auto: update
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
+      ddl-auto: create-drop
+    show-sql: false
+
+security:
+  jwt:
+    secret-key: test-super-secure-key-that-is-at-least-32-bytes-long!
+    expiration-ms: 900000
+
+app:
+  demo-mode: true
+  cors:
+    allowed-origins: "*"
 
 server:
   port: 8090

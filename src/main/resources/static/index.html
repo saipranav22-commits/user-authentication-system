@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Authentication System | JWT & RBAC Live Architecture Demo</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --surface-border: #334155;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #38bdf8;
+      --primary-hover: #0ea5e9;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --card-bg: #1e293b;
+      --code-bg: #0b1120;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding-bottom: 60px;
+    }
+
+    header {
+      background: rgba(30, 41, 59, 0.8);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--surface-border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .badge-primary { background: rgba(56, 189, 248, 0.15); color: var(--primary); border: 1px solid rgba(56, 189, 248, 0.3); }
+    .badge-success { background: rgba(16, 185, 129, 0.15); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-danger { background: rgba(239, 68, 68, 0.15); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.3); }
+    .badge-warning { background: rgba(245, 158, 11, 0.15); color: var(--warning); border: 1px solid rgba(245, 158, 11, 0.3); }
+
+    .nav-tabs {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 16px 24px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--surface-border);
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: 500;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .tab-btn:hover {
+      background: var(--surface);
+      color: var(--text);
+    }
+
+    .tab-btn.active {
+      background: var(--surface);
+      color: var(--primary);
+      border-color: var(--surface-border);
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 24px auto;
+      padding: 0 20px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    @media (max-width: 900px) {
+      .container { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--surface-border);
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+    }
+
+    .card h2 {
+      font-size: 1.25rem;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card p.desc {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      margin-bottom: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 500;
+      margin-bottom: 6px;
+      color: var(--text-muted);
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px 14px;
+      background: var(--bg);
+      border: 1px solid var(--surface-border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input:focus {
+      border-color: var(--primary);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 18px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary { background: var(--primary); color: #0284c7; }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-success { background: var(--success); color: #064e3b; }
+    .btn-danger { background: var(--danger); color: #450a0a; }
+    .btn-secondary { background: var(--surface-border); color: var(--text); }
+    .btn-secondary:hover { background: #475569; }
+
+    .btn-group {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .status-panel {
+      background: var(--code-bg);
+      border: 1px solid var(--surface-border);
+      border-radius: 10px;
+      padding: 16px;
+      margin-top: 20px;
+    }
+
+    .status-panel pre {
+      color: #38bdf8;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.82rem;
+      overflow-x: auto;
+      max-height: 250px;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .auth-banner {
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .auth-banner.logged-out {
+      background: rgba(148, 163, 184, 0.08);
+      border-color: var(--surface-border);
+    }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .token-box {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px dashed var(--surface-border);
+      padding: 12px;
+      border-radius: 8px;
+      margin-top: 12px;
+      font-size: 0.8rem;
+      word-break: break-all;
+    }
+
+    .pill-group {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <h1 style="font-size: 1.25rem; font-weight: 700;">🔐 User Authentication System</h1>
+      <span class="badge badge-primary">Spring Security 6 + JWT</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 16px;">
+      <div id="healthBadge" class="badge badge-warning">Checking Health...</div>
+      <a href="https://github.com/saipranav22-commits/user-authentication-system" target="_blank" style="color: var(--text-muted); text-decoration: none; font-size: 0.85rem;">GitHub Repo ↗</a>
+    </div>
+  </header>
+
+  <nav class="nav-tabs">
+    <button class="tab-btn active" onclick="switchTab('overview')">1. Architecture Overview</button>
+    <button class="tab-btn" onclick="switchTab('register')">2. Register & Verify</button>
+    <button class="tab-btn" onclick="switchTab('login')">3. Login & JWT Claims</button>
+    <button class="tab-btn" onclick="switchTab('protected')">4. Protected Routes & RBAC</button>
+    <button class="tab-btn" onclick="switchTab('refresh')">5. Token Rotation</button>
+    <button class="tab-btn" onclick="switchTab('reset')">6. Password Recovery</button>
+  </nav>
+
+  <div style="max-width: 1200px; margin: 16px auto 0; padding: 0 20px;">
+    <div id="sessionBanner" class="auth-banner logged-out">
+      <div>
+        <span style="font-weight: 600;">Current Session:</span>
+        <span id="sessionStatus" style="color: var(--text-muted); margin-left: 8px;">Anonymous (Not Logged In)</span>
+      </div>
+      <button id="logoutBtn" class="btn btn-danger" style="display: none; padding: 6px 14px; font-size: 0.8rem;" onclick="handleLogout()">Logout</button>
+    </div>
+  </div>
+
+  <main class="container">
+    
+    <!-- LEFT COLUMN: INTERACTIVE WORKFLOW FORMS -->
+    <div>
+
+      <!-- TAB 1: OVERVIEW -->
+      <section id="tab-overview" class="tab-content active card">
+        <h2>Architecture & Security Pipeline</h2>
+        <p class="desc">Foundational enterprise-grade authentication with Spring Boot 3.4.1, Spring Security 6, JJWT, and PostgreSQL persistence.</p>
+        
+        <div style="background: var(--code-bg); border-radius: 8px; padding: 16px; margin-bottom: 16px; border: 1px solid var(--surface-border);">
+          <div style="font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; color: var(--primary);">Security Architecture Flow</div>
+          <div style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.8;">
+            Client Request → <strong>CORS Filter</strong> → <strong>JwtAuthenticationFilter</strong> (extracts &amp; validates HS256 Bearer Token) → 
+            <strong>SecurityContextHolder</strong> (sets Principal &amp; GrantedAuthorities) → <strong>RBAC Gate</strong> (/api/user vs /api/admin) → 
+            <strong>Controller / Service</strong> → <strong>Neon PostgreSQL</strong>.
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div style="background: rgba(56, 189, 248, 0.05); padding: 12px; border-radius: 8px; border: 1px solid rgba(56, 189, 248, 0.2);">
+            <div style="font-size: 0.85rem; font-weight: 600; color: var(--primary);">Authentication</div>
+            <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">Stateless HS256 JWT (15-min access) + 30-day dynamic Refresh Token rotation.</div>
+          </div>
+          <div style="background: rgba(16, 185, 129, 0.05); padding: 12px; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.2);">
+            <div style="font-size: 0.85rem; font-weight: 600; color: var(--success);">Authorization (RBAC)</div>
+            <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">Granular roles: <code>ROLE_USER</code> and <code>ROLE_ADMIN</code> enforced at filter chain.</div>
+          </div>
+        </div>
+
+        <div style="margin-top: 20px;">
+          <button class="btn btn-primary" onclick="switchTab('register')">Start with Registration →</button>
+        </div>
+      </section>
+
+      <!-- TAB 2: REGISTER -->
+      <section id="tab-register" class="tab-content card">
+        <h2>Register New Account</h2>
+        <p class="desc">Registration persists password as a 60-character BCrypt hash and generates an email verification token.</p>
+        
+        <form onsubmit="handleRegister(event)">
+          <div class="form-group">
+            <label>Email Address</label>
+            <input type="email" id="regEmail" value="demo.engineer@example.com" required>
+          </div>
+          <div class="form-group">
+            <label>Password (Min 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char)</label>
+            <input type="password" id="regPassword" value="SecureP@ss123!" required>
+          </div>
+          <button type="submit" class="btn btn-primary">Register Account</button>
+        </form>
+
+        <div id="verificationDemoBox" style="display: none; margin-top: 20px;" class="card">
+          <h3 style="font-size: 0.95rem; color: var(--warning); margin-bottom: 6px;">📧 Demo Verification Step</h3>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">Under demo mode, your account token is provided below for immediate verification:</p>
+          <div id="demoTokenDisplay" class="token-box" style="margin-bottom: 12px;"></div>
+          <button id="verifyTokenBtn" class="btn btn-success" style="font-size: 0.85rem;" onclick="triggerVerification()">Click to Verify Email & Unlock Account</button>
+        </div>
+      </section>
+
+      <!-- TAB 3: LOGIN -->
+      <section id="tab-login" class="tab-content card">
+        <h2>User Authentication & Login</h2>
+        <p class="desc">Validates credentials using BCrypt and enforces email verification before issuing JWT.</p>
+
+        <form onsubmit="handleLogin(event)">
+          <div class="form-group">
+            <label>Email Address</label>
+            <input type="email" id="loginEmail" value="demo.engineer@example.com" required>
+          </div>
+          <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="loginPassword" value="SecureP@ss123!" required>
+          </div>
+          <button type="submit" class="btn btn-primary">Log In & Generate JWT</button>
+        </form>
+
+        <div id="jwtDetailsCard" style="display: none; margin-top: 20px;">
+          <h3 style="font-size: 0.9rem; margin-bottom: 8px;">Active Access Token (JWT) Claims</h3>
+          <div id="jwtClaimsDisplay" class="token-box"></div>
+        </div>
+      </section>
+
+      <!-- TAB 4: PROTECTED ROUTES & RBAC -->
+      <section id="tab-protected" class="tab-content card">
+        <h2>Role-Based Access Control (RBAC)</h2>
+        <p class="desc">Tests authorization filters against authenticated endpoints.</p>
+
+        <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
+          <div style="background: var(--bg); padding: 12px; border-radius: 8px; border: 1px solid var(--surface-border);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <span style="font-weight: 600; font-size: 0.9rem;">GET /api/user/profile</span>
+              <span class="badge badge-success">ROLE_USER or ROLE_ADMIN</span>
+            </div>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px;">Requires valid JWT with standard user authority.</p>
+            <button class="btn btn-secondary" onclick="callUserProfile()">Test User Route</button>
+          </div>
+
+          <div style="background: var(--bg); padding: 12px; border-radius: 8px; border: 1px solid var(--surface-border);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <span style="font-weight: 600; font-size: 0.9rem;">GET /api/admin/dashboard</span>
+              <span class="badge badge-danger">ROLE_ADMIN Only</span>
+            </div>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px;">Standard users will receive <strong>403 Forbidden</strong> confirming strict privilege separation.</p>
+            <button class="btn btn-secondary" onclick="callAdminDashboard()">Test Admin Route (Demonstrate 403)</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 5: TOKEN ROTATION -->
+      <section id="tab-refresh" class="tab-content card">
+        <h2>Dynamic Refresh Token Rotation</h2>
+        <p class="desc">Exchanges an active refresh token for a brand new JWT and newly rotated refresh token, invalidating the old token.</p>
+        
+        <div class="form-group">
+          <label>Current Refresh Token</label>
+          <input type="text" id="currentRefreshTokenDisplay" readonly placeholder="Log in first to obtain a refresh token">
+        </div>
+        <button class="btn btn-primary" onclick="handleTokenRefresh()">Rotate & Refresh Token</button>
+      </section>
+
+      <!-- TAB 6: PASSWORD RESET -->
+      <section id="tab-reset" class="tab-content card">
+        <h2>Password Recovery Workflow</h2>
+        <p class="desc">Dispatches time-limited reset token with anti-enumeration protection.</p>
+
+        <form onsubmit="handleResetRequest(event)">
+          <div class="form-group">
+            <label>Account Email</label>
+            <input type="email" id="resetEmail" value="demo.engineer@example.com" required>
+          </div>
+          <button type="submit" class="btn btn-secondary">Request Reset Link</button>
+        </form>
+
+        <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--surface-border);">
+          <h3 style="font-size: 0.95rem; margin-bottom: 12px;">Finalize Password Override</h3>
+          <form onsubmit="handleResetConfirm(event)">
+            <div class="form-group">
+              <label>Password Reset Token</label>
+              <input type="text" id="resetTokenInput" placeholder="Paste reset token here" required>
+            </div>
+            <div class="form-group">
+              <label>New Password</label>
+              <input type="password" id="resetNewPassword" value="NewSecureP@ss456!" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Apply New Password</button>
+          </form>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- RIGHT COLUMN: LIVE API CONSOLE INSPECTOR -->
+    <div>
+      <div class="card" style="position: sticky; top: 90px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <h2>Live Response Inspector</h2>
+          <span id="responseStatusBadge" class="badge badge-primary">IDLE</span>
+        </div>
+        <p class="desc">Inspects real-time HTTP requests, response status codes, and server JSON payloads.</p>
+
+        <div class="status-panel">
+          <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 6px;">
+            <span id="endpointLabel">READY</span>
+            <span id="timestampLabel">--:--:--</span>
+          </div>
+          <pre id="apiConsoleOutput">Waiting for API action... Click any action on the left to invoke real backend endpoints.</pre>
+        </div>
+
+        <div style="margin-top: 16px; display: flex; gap: 8px;">
+          <button class="btn btn-secondary" style="font-size: 0.8rem; padding: 6px 12px;" onclick="checkSystemHealth()">Check Health (/api/health)</button>
+          <button class="btn btn-secondary" style="font-size: 0.8rem; padding: 6px 12px;" onclick="clearConsole()">Clear Log</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    // In-memory state (token values not exposed in logs or insecure storage)
+    let state = {
+      accessToken: null,
+      refreshToken: null,
+      user: null,
+      lastVerificationToken: null
+    };
+
+    // Initialize health check on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      checkSystemHealth();
+      // Restore session if present in sessionStorage
+      const savedAccess = sessionStorage.getItem('auth_access_token');
+      const savedRefresh = sessionStorage.getItem('auth_refresh_token');
+      const savedUser = sessionStorage.getItem('auth_user');
+      if (savedAccess && savedRefresh) {
+        state.accessToken = savedAccess;
+        state.refreshToken = savedRefresh;
+        state.user = savedUser ? JSON.parse(savedUser) : null;
+        updateSessionUI();
+      }
+    });
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      
+      const targetBtn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.getAttribute('onclick').includes(tabId));
+      if (targetBtn) targetBtn.classList.add('active');
+      
+      const targetTab = document.getElementById(`tab-${tabId}`);
+      if (targetTab) targetTab.classList.add('active');
+    }
+
+    function logApi(method, endpoint, statusCode, data) {
+      const consoleEl = document.getElementById('apiConsoleOutput');
+      const statusBadge = document.getElementById('responseStatusBadge');
+      const endpointLabel = document.getElementById('endpointLabel');
+      const timestampLabel = document.getElementById('timestampLabel');
+
+      endpointLabel.textContent = `${method} ${endpoint}`;
+      timestampLabel.textContent = new Date().toLocaleTimeString();
+
+      statusBadge.textContent = `HTTP ${statusCode}`;
+      if (statusCode >= 200 && statusCode < 300) {
+        statusBadge.className = 'badge badge-success';
+      } else if (statusCode >= 400 && statusCode < 500) {
+        statusBadge.className = 'badge badge-danger';
+      } else {
+        statusBadge.className = 'badge badge-warning';
+      }
+
+      // Sanitize payload to avoid printing raw sensitive credentials in UI
+      const sanitized = JSON.parse(JSON.stringify(data));
+      if (sanitized.data && sanitized.data.accessToken) {
+        sanitized.data.accessToken = sanitized.data.accessToken.substring(0, 16) + '...[TRUNCATED_FOR_SECURITY]';
+      }
+      if (sanitized.data && sanitized.data.refreshToken) {
+        sanitized.data.refreshToken = sanitized.data.refreshToken.substring(0, 10) + '...[TRUNCATED]';
+      }
+
+      consoleEl.textContent = JSON.stringify(sanitized, null, 2);
+    }
+
+    function clearConsole() {
+      document.getElementById('apiConsoleOutput').textContent = 'Console cleared.';
+      document.getElementById('responseStatusBadge').textContent = 'IDLE';
+      document.getElementById('responseStatusBadge').className = 'badge badge-primary';
+    }
+
+    async function checkSystemHealth() {
+      try {
+        const res = await fetch('/api/health');
+        const data = await res.json();
+        const badge = document.getElementById('healthBadge');
+        if (data.status === 'UP') {
+          badge.textContent = 'System Healthy (UP)';
+          badge.className = 'badge badge-success';
+        } else {
+          badge.textContent = 'System Degraded';
+          badge.className = 'badge badge-warning';
+        }
+        logApi('GET', '/api/health', res.status, data);
+      } catch (err) {
+        const badge = document.getElementById('healthBadge');
+        badge.textContent = 'Offline';
+        badge.className = 'badge badge-danger';
+      }
+    }
+
+    async function handleRegister(e) {
+      e.preventDefault();
+      const email = document.getElementById('regEmail').value;
+      const password = document.getElementById('regPassword').value;
+
+      try {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        logApi('POST', '/api/auth/register', res.status, data);
+
+        if (res.ok && data.data) {
+          const verificationToken = data.data.token;
+          if (verificationToken) {
+            state.lastVerificationToken = verificationToken;
+            document.getElementById('verificationDemoBox').style.display = 'block';
+            document.getElementById('demoTokenDisplay').textContent = `Verification Token: ${verificationToken}`;
+          }
+        }
+      } catch (err) {
+        logApi('POST', '/api/auth/register', 500, { error: err.message });
+      }
+    }
+
+    async function triggerVerification() {
+      if (!state.lastVerificationToken) return;
+      try {
+        const res = await fetch(`/api/auth/verify-email?token=${encodeURIComponent(state.lastVerificationToken)}`);
+        const data = await res.json();
+        logApi('GET', `/api/auth/verify-email`, res.status, data);
+        if (res.ok) {
+          document.getElementById('verificationDemoBox').innerHTML = `<span style="color: var(--success); font-weight: 600;">✓ Email verified successfully! You may now proceed to Login.</span>`;
+        }
+      } catch (err) {
+        logApi('GET', `/api/auth/verify-email`, 500, { error: err.message });
+      }
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        logApi('POST', '/api/auth/login', res.status, data);
+
+        if (res.ok && data.data) {
+          state.accessToken = data.data.accessToken;
+          state.refreshToken = data.data.refreshToken;
+          state.user = data.data.user;
+
+          sessionStorage.setItem('auth_access_token', state.accessToken);
+          sessionStorage.setItem('auth_refresh_token', state.refreshToken);
+          sessionStorage.setItem('auth_user', JSON.stringify(state.user));
+
+          updateSessionUI();
+          parseAndDisplayJwt(state.accessToken);
+        }
+      } catch (err) {
+        logApi('POST', '/api/auth/login', 500, { error: err.message });
+      }
+    }
+
+    function parseAndDisplayJwt(token) {
+      try {
+        const parts = token.split('.');
+        if (parts.length === 3) {
+          const payload = JSON.parse(atob(parts[1]));
+          const displayEl = document.getElementById('jwtClaimsDisplay');
+          const card = document.getElementById('jwtDetailsCard');
+          card.style.display = 'block';
+          displayEl.textContent = JSON.stringify(payload, null, 2);
+        }
+      } catch (e) {
+        console.error('Failed to parse JWT payload', e);
+      }
+    }
+
+    function updateSessionUI() {
+      const banner = document.getElementById('sessionBanner');
+      const status = document.getElementById('sessionStatus');
+      const logoutBtn = document.getElementById('logoutBtn');
+      const refreshDisplay = document.getElementById('currentRefreshTokenDisplay');
+
+      if (state.accessToken && state.user) {
+        banner.className = 'auth-banner';
+        status.innerHTML = `<span style="color: var(--success); font-weight: 600;">Authenticated:</span> ${state.user.email} <span class="badge badge-primary" style="margin-left: 6px;">${state.user.roles.join(', ')}</span>`;
+        logoutBtn.style.display = 'inline-block';
+        if (refreshDisplay && state.refreshToken) {
+          refreshDisplay.value = state.refreshToken;
+        }
+      } else {
+        banner.className = 'auth-banner logged-out';
+        status.textContent = 'Anonymous (Not Logged In)';
+        logoutBtn.style.display = 'none';
+        if (refreshDisplay) refreshDisplay.value = '';
+        document.getElementById('jwtDetailsCard').style.display = 'none';
+      }
+    }
+
+    async function callUserProfile() {
+      if (!state.accessToken) {
+        alert('Please log in first to obtain a Bearer token.');
+        return;
+      }
+      try {
+        const res = await fetch('/api/user/profile', {
+          headers: { 'Authorization': `Bearer ${state.accessToken}` }
+        });
+        const data = await res.json();
+        logApi('GET', '/api/user/profile', res.status, data);
+      } catch (err) {
+        logApi('GET', '/api/user/profile', 500, { error: err.message });
+      }
+    }
+
+    async function callAdminDashboard() {
+      if (!state.accessToken) {
+        alert('Please log in first to test endpoint authorization.');
+        return;
+      }
+      try {
+        const res = await fetch('/api/admin/dashboard', {
+          headers: { 'Authorization': `Bearer ${state.accessToken}` }
+        });
+        let data = {};
+        try { data = await res.json(); } catch(e) { data = { message: "403 Forbidden - Access Denied by Spring Security" }; }
+        logApi('GET', '/api/admin/dashboard', res.status, data);
+      } catch (err) {
+        logApi('GET', '/api/admin/dashboard', 500, { error: err.message });
+      }
+    }
+
+    async function handleTokenRefresh() {
+      if (!state.refreshToken) {
+        alert('No refresh token available. Please log in first.');
+        return;
+      }
+      try {
+        const res = await fetch('/api/auth/refresh', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refreshToken: state.refreshToken })
+        });
+        const data = await res.json();
+        logApi('POST', '/api/auth/refresh', res.status, data);
+
+        if (res.ok && data.data) {
+          state.accessToken = data.data.accessToken;
+          state.refreshToken = data.data.refreshToken;
+          sessionStorage.setItem('auth_access_token', state.accessToken);
+          sessionStorage.setItem('auth_refresh_token', state.refreshToken);
+          updateSessionUI();
+          parseAndDisplayJwt(state.accessToken);
+        }
+      } catch (err) {
+        logApi('POST', '/api/auth/refresh', 500, { error: err.message });
+      }
+    }
+
+    async function handleResetRequest(e) {
+      e.preventDefault();
+      const email = document.getElementById('resetEmail').value;
+      try {
+        const res = await fetch('/api/auth/password-reset/request', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        const data = await res.json();
+        logApi('POST', '/api/auth/password-reset/request', res.status, data);
+      } catch (err) {
+        logApi('POST', '/api/auth/password-reset/request', 500, { error: err.message });
+      }
+    }
+
+    async function handleResetConfirm(e) {
+      e.preventDefault();
+      const token = document.getElementById('resetTokenInput').value;
+      const newPassword = document.getElementById('resetNewPassword').value;
+
+      try {
+        const res = await fetch('/api/auth/password-reset/confirm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token, newPassword })
+        });
+        const data = await res.json();
+        logApi('POST', '/api/auth/password-reset/confirm', res.status, data);
+      } catch (err) {
+        logApi('POST', '/api/auth/password-reset/confirm', 500, { error: err.message });
+      }
+    }
+
+    async function handleLogout() {
+      if (!state.accessToken) return;
+      try {
+        const res = await fetch('/api/auth/logout', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${state.accessToken}` }
+        });
+        const data = await res.json();
+        logApi('POST', '/api/auth/logout', res.status, data);
+      } catch (err) {
+        console.error('Logout error', err);
+      } finally {
+        state.accessToken = null;
+        state.refreshToken = null;
+        state.user = null;
+        sessionStorage.clear();
+        updateSessionUI();
+      }
+    }
+  </script>
+</body>
+</html>
