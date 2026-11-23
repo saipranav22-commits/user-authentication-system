@@ -83,22 +83,33 @@ public class RegistrationFlowIntegrationTest {
         refreshToken = response.getRefreshToken();
     }
 
+    private static String oldRefreshTokenA;
+
     @Test
     @Order(6)
     public void testTokenRefreshRotation() {
-        TokenRefreshRequest request = new TokenRefreshRequest(refreshToken);
+        oldRefreshTokenA = refreshToken;
+        TokenRefreshRequest request = new TokenRefreshRequest(oldRefreshTokenA);
         AuthResponse response = userService.refreshAccessToken(request);
 
         assertNotNull(response);
         assertNotNull(response.getAccessToken());
         assertNotNull(response.getRefreshToken());
-        assertNotEquals(refreshToken, response.getRefreshToken(), "Refresh token must be rotated");
+        assertNotEquals(oldRefreshTokenA, response.getRefreshToken(), "Refresh token must be rotated");
 
         refreshToken = response.getRefreshToken();
     }
 
     @Test
     @Order(7)
+    public void testReplayingRotatedTokenRejected() {
+        TokenRefreshRequest request = new TokenRefreshRequest(oldRefreshTokenA);
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> userService.refreshAccessToken(request));
+        assertEquals(401, ex.getStatusCode().value());
+    }
+
+    @Test
+    @Order(8)
     public void testLogoutRevocation() {
         assertDoesNotThrow(() -> userService.logout(email));
 
