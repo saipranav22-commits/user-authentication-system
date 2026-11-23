@@ -167,4 +167,61 @@ public class UserServiceTest {
         verify(userRepository, times(1)).findByEmail("unknown@example.com");
         verify(emailService, never()).sendPasswordResetEmail(anyString(), anyString());
     }
+
+    @Test
+    public void completePasswordReset_Success_RevokesRefreshTokens() {
+        // Arrange
+        String resetToken = "valid-reset-token";
+        user.setPasswordResetToken(resetToken);
+        user.setPasswordResetTokenExpiry(java.time.LocalDateTime.now().plusHours(1));
+
+        when(userRepository.findByPasswordResetToken(resetToken)).thenReturn(Optional.of(user));
+        when(passwordEncoder.encode("NewSecurePassword123!")).thenReturn("new_hashed_password");
+        when(userRepository.save(any(User.class))).thenReturn(user);
+
+        // Act
+        com.edu.authsystem.dto.PasswordResetConfirmRequest confirmRequest =
+                new com.edu.authsystem.dto.PasswordResetConfirmRequest(resetToken, "NewSecurePassword123!");
+        assertDoesNotThrow(() -> userService.completePasswordReset(confirmRequest));
+
+        // Assert
+        assertNull(user.getPasswordResetToken(), "Reset token must be cleared after single use");
+        assertNull(user.getPasswordResetTokenExpiry(), "Reset token expiry must be cleared");
+        assertEquals("new_hashed_password", user.getPassword());
+        verify(userRepository, times(1)).save(user);
+        verify(refreshTokenRepository, times(1)).deleteByUser(user);
+        verify(refreshTokenRepository, times(1)).flush();
+    }
+
+    @Test
+    public void completePasswordReset_ExpiredToken_ThrowsException() {
+        // Arrange
+        String resetToken = "expired-reset-token";
+        user.setPasswordResetToken(resetToken);
+        user.setPasswordResetTokenExpiry(java.time.LocalDateTime.now().minusMinutes(5));
+
+        when(userRepository.findByPasswordResetToken(resetToken)).thenReturn(Optional.of(user));
+
+        // Act & Assert
+        com.edu.authsystem.dto.PasswordResetConfirmRequest confirmRequest =
+                new com.edu.authsystem.dto.PasswordResetConfirmRequest(resetToken, "NewSecurePassword123!");
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> userService.completePasswordReset(confirmRequest));
+        assertEquals(400, ex.getStatusCode().value());
+        verify(userRepository, never()).save(any(User.class));
+        verify(refreshTokenRepository, never()).deleteByUser(any(User.class));
+    }
+
+    @Test
+    public void completePasswordReset_InvalidToken_ThrowsException() {
+        // Arrange
+        when(userRepository.findByPasswordResetToken("nonexistent-token")).thenReturn(Optional.empty());
+
+        // Act & Assert
+        com.edu.authsystem.dto.PasswordResetConfirmRequest confirmRequest =
+                new com.edu.authsystem.dto.PasswordResetConfirmRequest("nonexistent-token", "NewSecurePassword123!");
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> userService.completePasswordReset(confirmRequest));
+        assertEquals(400, ex.getStatusCode().value());
+        verify(userRepository, never()).save(any(User.class));
+        verify(refreshTokenRepository, never()).deleteByUser(any(User.class));
+    }
 }

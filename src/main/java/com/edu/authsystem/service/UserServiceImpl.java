@@ -249,6 +249,10 @@ public class UserServiceImpl implements UserService {
         user.setPasswordResetTokenExpiry(null);
 
         userRepository.save(user);
+
+        // Invalidate all active refresh tokens to terminate persistent sessions across all devices
+        refreshTokenRepository.deleteByUser(user);
+        refreshTokenRepository.flush();
     }
 
     private UserResponse convertToResponse(User user) {
