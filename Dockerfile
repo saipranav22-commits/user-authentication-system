@@ -25,9 +25,14 @@ USER spring:spring
 # Copy built artifact from builder stage
 COPY --from=builder --chown=spring:spring /app/target/auth-system-*.jar app.jar
 
-# Dynamic port binding for Render
+# Dynamic port binding and production profile activation
 ENV PORT=8080
+ENV SPRING_PROFILES_ACTIVE=prod
 EXPOSE 8080
+
+# Native container healthcheck probe against /api/health
+HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:${PORT:-8080}/api/health || exit 1
 
 # SerialGC and heap tuning strictly within 512MB RAM allocation
 ENTRYPOINT ["java", "-XX:+UseSerialGC", "-Xmx384m", "-Xms128m", "-Xss512k", "-Djava.security.egd=file:/dev/./urandom", "-jar", "app.jar"]

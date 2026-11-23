@@ -31,7 +31,7 @@ server:
 security:
   jwt:
     # 256-bit signing key loaded securely from environment variable (SEC-03)
-    secret-key: ${JWT_SECRET:}
+    secret-key: ${JWT_SECRET:default-local-dev-jwt-secret-key-must-be-32-bytes-minimum}
     expiration-ms: ${JWT_EXPIRATION_MS:900000}
 
 app:

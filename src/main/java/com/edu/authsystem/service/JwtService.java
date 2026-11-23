@@ -38,20 +38,24 @@ public class JwtService {
     @Value("${security.jwt.expiration-ms:${JWT_EXPIRATION_MS:900000}}")
     private long jwtExpirationMs;
 
+    @Value("${spring.profiles.active:default}")
+    private String activeProfile;
+
     private SecretKey signingKey;
 
     @PostConstruct
     public void init() {
         if (secretKeyString == null || secretKeyString.trim().isEmpty()) {
-            logger.warn("JWT secret key was not provided via environment variable (JWT_SECRET). Initializing secure runtime key.");
-            this.signingKey = Keys.secretKeyFor(SignatureAlgorithm.HS256);
-        } else {
-            byte[] keyBytes = secretKeyString.getBytes(StandardCharsets.UTF_8);
-            if (keyBytes.length < 32) {
-                throw new IllegalStateException("JWT signing key must be at least 256 bits (32 bytes). Configured key length: " + keyBytes.length + " bytes.");
-            }
-            this.signingKey = Keys.hmacShaKeyFor(keyBytes);
+            throw new IllegalStateException("JWT signing secret is mandatory. Configure the JWT_SECRET environment variable.");
         }
+        if (activeProfile.contains("prod") && secretKeyString.contains("default-local-dev")) {
+            throw new IllegalStateException("Insecure development JWT secret cannot be used in production.");
+        }
+        byte[] keyBytes = secretKeyString.getBytes(StandardCharsets.UTF_8);
+        if (keyBytes.length < 32) {
+            throw new IllegalStateException("JWT signing key must be at least 256 bits (32 bytes). Configured key length: " + keyBytes.length + " bytes.");
+        }
+        this.signingKey = Keys.hmacShaKeyFor(keyBytes);
     }
 
     private SecretKey getSigningKey() {
