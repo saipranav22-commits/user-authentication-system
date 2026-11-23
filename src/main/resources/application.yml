@@ -35,8 +35,8 @@ security:
     expiration-ms: ${JWT_EXPIRATION_MS:900000}
 
 app:
-  # Demo mode disabled by default; set to true explicitly if token inspection is needed for local development
-  demo-mode: ${APP_DEMO_MODE:false}
+  # Portfolio mode enables isolated verification token in the registration response for zero-cost activation
+  portfolio-mode: ${APP_PORTFOLIO_MODE:${APP_DEMO_MODE:true}}
   cors:
     # Restrictive CORS: empty by default because frontend is served on the same origin
     allowed-origins: ${CORS_ALLOWED_ORIGINS:}

@@ -88,4 +88,12 @@ public class UserResponse {
     public void setToken(String token) {
         this.token = token;
     }
+
+    public String getVerificationToken() {
+        return token;
+    }
+
+    public void setVerificationToken(String verificationToken) {
+        this.token = verificationToken;
+    }
 }

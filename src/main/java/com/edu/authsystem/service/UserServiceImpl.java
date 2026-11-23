@@ -41,8 +41,8 @@ public class UserServiceImpl implements UserService {
     private final JwtService jwtService;
     private final EmailService emailService;
 
-    @org.springframework.beans.factory.annotation.Value("${app.demo-mode:true}")
-    private boolean demoMode;
+    @org.springframework.beans.factory.annotation.Value("${app.portfolio-mode:${app.demo-mode:true}}")
+    private boolean portfolioMode;
 
     @Autowired
     public UserServiceImpl(UserRepository userRepository,
@@ -83,11 +83,12 @@ public class UserServiceImpl implements UserService {
         emailService.sendVerificationEmail(savedUser.getEmail(), verificationToken);
 
         UserResponse response = convertToResponse(savedUser);
-        // Under demo mode, supply verification token in the response object to allow self-verification without external SMTP
-        if (demoMode) {
-            response.setToken(verificationToken);
+        // In portfolio mode (when external transactional SMTP is unconfigured), provide the isolated verification
+        // token strictly to the registrant in the registration response. Never exposes existing accounts' tokens.
+        if (portfolioMode) {
+            response.setVerificationToken(verificationToken);
         } else {
-            response.setToken(null);
+            response.setVerificationToken(null);
         }
         return response;
     }
