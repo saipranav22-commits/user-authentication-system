@@ -1,0 +1,260 @@
+1
+00:00:00,500 --> 00:00:04,396
+Welcome to the technical demonstration of the
+
+2
+00:00:04,546 --> 00:00:08,443
+User Authentication and Role-Based Access Control System.
+
+3
+00:00:08,593 --> 00:00:11,934
+Securing user identities while maintaining stateless
+
+4
+00:00:12,084 --> 00:00:15,980
+session scalability is a core engineering challenge.
+
+5
+00:00:16,130 --> 00:00:21,141
+Traditional server-side sessions create clustering bottlenecks, while naive JSON
+
+6
+00:00:21,291 --> 00:00:26,858
+Web Token setups often lack token revocation and replay defense.
+
+7
+00:00:27,008 --> 00:00:34,245
+This project delivers an enterprise-grade authentication architecture built with Spring Boot 3.4.1, Spring
+
+8
+00:00:34,395 --> 00:00:41,632
+Security 6, JJWT, and PostgreSQL, deployed at zero cost on Render and Neon.
+
+9
+00:00:41,782 --> 00:00:45,122
+Incoming HTTP requests pass through a
+
+10
+00:00:45,272 --> 00:00:49,169
+strict Cross-Origin filter before reaching the JwtAuthenticationFilter.
+
+11
+00:00:49,319 --> 00:00:55,443
+This component inspects the Authorization header for an HMAC-SHA256 Bearer token.
+
+12
+00:00:55,593 --> 00:00:59,490
+Upon validating signature integrity and expiration, it
+
+13
+00:00:59,640 --> 00:01:04,093
+sets the authentication principal in Spring Security's SecurityContextHolder.
+
+14
+00:01:04,243 --> 00:01:10,367
+Downstream authorization gates enforce role-based access control, routing verified traffic through
+
+15
+00:01:10,517 --> 00:01:16,641
+service and repository layers into a dedicated serverless Neon PostgreSQL database.
+
+16
+00:01:16,791 --> 00:01:20,131
+In the interactive dashboard, a new
+
+17
+00:01:20,281 --> 00:01:24,178
+user registers with an email and password.
+
+18
+00:01:24,328 --> 00:01:29,895
+The service layer verifies payload constraints and email uniqueness, then
+
+19
+00:01:30,045 --> 00:01:36,168
+hashes the password using BCrypt with a workload factor of 10.
+
+20
+00:01:36,318 --> 00:01:41,885
+The account is created with verification locked, preventing unauthorized login.
+
+21
+00:01:42,035 --> 00:01:45,376
+A 24-hour verification token is issued.
+
+22
+00:01:45,526 --> 00:01:50,536
+In this portfolio demo mode, the token is provided
+
+23
+00:01:50,686 --> 00:01:56,253
+directly to demonstrate verification without requiring external transactional SMTP infrastructure.
+
+24
+00:01:56,403 --> 00:02:03,083
+Triggering verification unlocks the account and clears the token to prevent reuse.
+
+25
+00:02:03,233 --> 00:02:07,130
+Next, we authenticate using our registered credentials.
+
+26
+00:02:07,280 --> 00:02:11,177
+The backend queries PostgreSQL, returning a uniform
+
+27
+00:02:11,327 --> 00:02:15,781
+InvalidCredentialsException if lookup fails, mitigating user enumeration attacks.
+
+28
+00:02:15,931 --> 00:02:21,498
+Once BCrypt confirms the password hash and verifies activation, the
+
+29
+00:02:21,648 --> 00:02:27,215
+JwtService generates a short-lived 15-minute access token signed with HMAC-SHA256.
+
+30
+00:02:27,365 --> 00:02:33,488
+Simultaneously, a persistent 30-day UUID refresh token is saved to PostgreSQL.
+
+31
+00:02:33,638 --> 00:02:37,535
+Inspecting the live claims, we see the
+
+32
+00:02:37,685 --> 00:02:42,139
+user subject, granted ROLE_USER authority, and expiration timestamp.
+
+33
+00:02:42,289 --> 00:02:45,629
+Now we demonstrate Role-Based Access Control.
+
+34
+00:02:45,779 --> 00:02:51,346
+Invoking the protected user endpoint at GET /api/user/profile with our
+
+35
+00:02:51,496 --> 00:02:57,063
+Bearer token returns HTTP 200 OK with authorized profile details.
+
+36
+00:02:57,213 --> 00:03:03,337
+However, when we attempt to access GET /api/admin/dashboard using this same
+
+37
+00:03:03,487 --> 00:03:10,167
+token, Spring Security blocks the request, returning an immediate HTTP 403 Forbidden.
+
+38
+00:03:10,317 --> 00:03:16,441
+This confirms strict privilege boundary separation between standard users and administrators.
+
+39
+00:03:16,591 --> 00:03:20,488
+To balance security with usability, short-lived access
+
+40
+00:03:20,638 --> 00:03:24,535
+tokens are refreshed using persistent refresh tokens.
+
+41
+00:03:24,685 --> 00:03:33,592
+When we invoke POST /api/auth/refresh, the backend executes strict token rotation: the submitted refresh token is
+
+42
+00:03:33,742 --> 00:03:42,649
+permanently deleted from PostgreSQL, and a brand new refresh token is issued alongside a fresh JWT.
+
+43
+00:03:42,799 --> 00:03:49,480
+If an attacker replays the old token, the backend detects it is
+
+44
+00:03:49,630 --> 00:03:56,867
+missing and rejects the request with HTTP 401 Unauthorized, defeating token replay attacks.
+
+45
+00:03:57,017 --> 00:04:00,914
+Password recovery enforces anti-enumeration by returning a
+
+46
+00:04:01,064 --> 00:04:04,960
+uniform success message regardless of account existence.
+
+47
+00:04:05,110 --> 00:04:09,007
+Validating the 1-hour reset token updates the
+
+48
+00:04:09,157 --> 00:04:13,054
+BCrypt password hash and nullifies the token.
+
+49
+00:04:13,204 --> 00:04:18,771
+Crucially, as verified in commit 1e27b90, password reset instantly purges
+
+50
+00:04:18,921 --> 00:04:25,045
+all active refresh tokens from PostgreSQL, terminating sessions across all devices.
+
+51
+00:04:25,195 --> 00:04:30,762
+Similarly, invoking Logout purges the user's refresh token from the
+
+52
+00:04:30,912 --> 00:04:36,479
+database, preventing subsequent token renewals while stateless JWTs expire naturally.
+
+53
+00:04:36,629 --> 00:04:42,196
+The application is deployed on Render's Free web service, containerized
+
+54
+00:04:42,346 --> 00:04:48,470
+with multi-stage Docker on Java 21 LTS and Spring Boot 3.4.1.
+
+55
+00:04:48,620 --> 00:04:51,960
+Persistence is managed by a separate
+
+56
+00:04:52,110 --> 00:04:56,007
+serverless Neon PostgreSQL database with SSL enforcement.
+
+57
+00:04:56,157 --> 00:05:01,724
+All secrets, including the 256-bit JWT key and database credentials,
+
+58
+00:05:01,874 --> 00:05:07,441
+are injected via cloud environment variables with zero hardcoded fallbacks.
+
+59
+00:05:07,591 --> 00:05:10,931
+The system is protected by 25
+
+60
+00:05:11,081 --> 00:05:14,978
+automated unit and integration tests passing cleanly.
+
+61
+00:05:15,128 --> 00:05:22,365
+In summary, this project demonstrates end-to-end authentication engineering: cryptographic security, role-based authorization, dynamic
+
+62
+00:05:22,515 --> 00:05:29,752
+token rotation, replay defense, and production cloud containerization on a strict zero-rupee budget.
+
+63
+00:05:29,902 --> 00:05:32,150
+The complete source code is available on GitHub at
+
+64
+00:05:32,300 --> 00:05:32,150
+github.com/saipranav22-commits/user-authentication-system, and the live application can be accessed online.
+
+65
+00:05:32,300 --> 00:05:32,150
+Thank you for watching.
+

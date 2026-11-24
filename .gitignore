@@ -5,3 +5,13 @@ target/
 .idea/
 .vscode/
 .env
+
+# Large demo media files (stored locally, not tracked in git repository)
+*.mp4
+*.wav
+*.webm
+*.mp3
+docs/demo/recordings/
+docs/demo/voiceover/*.wav
+docs/demo/voiceover/*.mp3
+docs/demo/final/*.mp4
