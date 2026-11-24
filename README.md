@@ -4,30 +4,80 @@
 [![Java Version](https://img.shields.io/badge/Java-21%20LTS-orange?style=flat-square&logo=openjdk)](https://openjdk.org/projects/jdk/21/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4.1-brightgreen?style=flat-square&logo=springboot)](https://spring.io/projects/spring-boot)
 [![Spring Security](https://img.shields.io/badge/Spring%20Security-6.4.2-green?style=flat-square&logo=springsecurity)](https://spring.io/projects/spring-security)
-[![PostgreSQL](https://img.shields.io/badge/Database-Neon%20PostgreSQL%20(SSL)-blue?style=flat-square&logo=postgresql)](https://neon.tech/)
+[![PostgreSQL](https://img.shields.io/badge/Database-Neon%20PostgreSQL%20%28SSL%29-blue?style=flat-square&logo=postgresql)](https://neon.tech/)
 [![Deployment](https://img.shields.io/badge/Hosted%20On-Render%20Cloud-46E3B7?style=flat-square&logo=render)](https://user-authentication-system-y5l5.onrender.com/)
 [![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](LICENSE)
 
-A production-grade, containerized identity and access management backend engineered with **Spring Boot 3.4.1**, **Spring Security 6**, **JJWT**, and **PostgreSQL**. Demonstrates secure authentication, stateless short-lived access tokens, database-backed refresh token rotation with replay detection, role-based authorization, and anti-enumeration protections—deployed on a strict **₹0 cloud infrastructure** (Render Free + Neon PostgreSQL).
+A production-grade, containerized identity and access management system built with **Spring Boot 3.4.1**, **Spring Security 6**, **JJWT**, and **PostgreSQL**. Demonstrates secure authentication, short-lived stateless access tokens, database-backed refresh token rotation with replay detection, role-based authorization, and anti-enumeration protections—deployed on a strict **₹0 cloud infrastructure** (Render Free + Neon PostgreSQL).
 
 ---
 
-## 🌐 Live Application & Video Walkthrough
+## 🔗 Quick Links & Live Demonstration
 
-- **Live Deployed Application:** [https://user-authentication-system-y5l5.onrender.com/](https://user-authentication-system-y5l5.onrender.com/)
-- **Live Health Status:** [https://user-authentication-system-y5l5.onrender.com/api/health](https://user-authentication-system-y5l5.onrender.com/api/health)
-- **GitHub Repository:** [https://github.com/saipranav22-commits/user-authentication-system](https://github.com/saipranav22-commits/user-authentication-system)
-
-### 📹 Technical Demonstration Video
-A full 5.5-minute technical walkthrough video (`jwt-authentication-system-demo.mp4`) with synchronized neural narration and English subtitles has been prepared.
-- **Local Video Asset:** `docs/demo/final/jwt-authentication-system-demo.mp4` (1080p, 30 FPS, H.264/AAC, 14.3 MB)
-- **Subtitles (SRT):** `docs/demo/final/jwt-authentication-system-subtitles.srt`
-- **YouTube Metadata & Chapters:** [docs/demo/final/YOUTUBE_METADATA.md](docs/demo/final/YOUTUBE_METADATA.md)
-- **YouTube Walkthrough Link:** *(Upload pending; see manual upload instructions in `YOUTUBE_METADATA.md` to publish as Unlisted)*
+- 🌐 **Live Deployed Application:** [https://user-authentication-system-y5l5.onrender.com/](https://user-authentication-system-y5l5.onrender.com/)
+- 💚 **Live System Health Check:** [https://user-authentication-system-y5l5.onrender.com/api/health](https://user-authentication-system-y5l5.onrender.com/api/health)
+- 📂 **GitHub Source Code:** [https://github.com/saipranav22-commits/user-authentication-system](https://github.com/saipranav22-commits/user-authentication-system)
+- 🎥 **YouTube Video Walkthrough:** [https://youtu.be/wF7aSG48r-U](https://youtu.be/wF7aSG48r-U)
 
 ---
 
-## 📸 Application Screenshots
+## 📺 Watch Project Demonstration
+
+Click the thumbnail below to watch the full 5.5-minute technical demonstration with synchronized audio narration and English subtitles:
+
+[![Watch JWT Authentication System Demo](docs/demo/final/jwt-authentication-system-thumbnail.png)](https://youtu.be/wF7aSG48r-U)
+
+> 🎬 **Direct Video Link:** [https://youtu.be/wF7aSG48r-U](https://youtu.be/wF7aSG48r-U)  
+> *A genuine, continuous walkthrough recorded from the live deployed application on Render, demonstrating real API invocations, JWT claims parsing, RBAC gates, and token rotation.*
+
+### ⏱️ Video Chapters & Timestamps
+- `00:00` — **Scene 1:** Project Introduction & Stateless vs Stateful Authentication
+- `00:36` — **Scene 2:** High-Level Architecture & Spring Security Filter Pipeline
+- `01:16` — **Scene 3:** User Registration, BCrypt Hashing & Email Verification Workflow
+- `01:58` — **Scene 4:** Authentication, BCrypt Verification & JWT Token Generation
+- `02:44` — **Scene 5:** Role-Based Access Control (RBAC) Enforcement (HTTP 200 vs 403)
+- `03:26` — **Scene 6:** Dynamic Refresh-Token Rotation & Replay Attack Defense
+- `04:12` — **Scene 7:** Password Reset Recovery, Session Revocation & Logout Mechanics
+- `04:54` — **Scene 8:** Production Cloud Architecture (Docker, Render Free & Neon PostgreSQL)
+- `05:26` — **Scene 9:** Conclusion, Verification Results & Engineering Portfolio Links
+
+---
+
+## 💡 Project Overview & The Real-World Problem
+
+Modern web and mobile applications require scalable user authentication that minimizes database lookups while maintaining tight security over user sessions:
+
+1. **Stateful Session Bottlenecks:** Traditional HTTP session stores keep session state in server memory. When scaling horizontally across multiple container instances, teams must deploy distributed cache clusters (e.g., Redis) or sticky sessions, introducing operational complexity and hosting costs.
+2. **Stateless JWT Vulnerabilities:** Pure stateless JSON Web Tokens scale effortlessly across clusters, but naive setups introduce severe security risks:
+   - **Inability to Revoke Sessions:** If a client logs out or changes credentials, an active JWT remains valid until expiration.
+   - **Long-Lived Bearer Risk:** Using long-lived access tokens increases the window of compromise if a token is intercepted.
+   - **No Replay Defense:** If a refresh token is stolen, an attacker can continuously mint new access tokens undetected.
+3. **The Solution:** This project implements an enterprise-grade hybrid architecture:
+   - **Short-Lived Stateless Access Tokens (15 min):** Validated in-memory via cryptographic signature (HS256) without database lookups during micro-requests.
+   - **Revocable Persistent Refresh Tokens (30 days):** Maintained in PostgreSQL with **automatic single-use rotation**. Any replayed token is rejected immediately (HTTP 401).
+   - **Session Purging on Sensitive Events:** Both **Logout** and **Password Reset** immediately purge refresh tokens from the database, terminating persistent sessions across all devices.
+
+---
+
+## 🛡️ Key Authentication & Security Features
+
+| Feature | Engineering Implementation | Security Benefit |
+| :--- | :--- | :--- |
+| **Stateless HS256 JWT** | Signed with HMAC-SHA256 using a mandatory 256-bit key; 15-minute lifespan (`900,000 ms`). | Zero database overhead for request authorization; minimal blast radius if intercepted. |
+| **Dynamic Token Rotation** | Each call to `POST /api/auth/refresh` deletes the submitted token and issues a new pair. | Prevents perpetual session hijacking; limits token reuse. |
+| **Replay Attack Defense** | Replaying a previously rotated refresh token fails with HTTP `401 Unauthorized`. | Detects stale or compromised tokens; denies unauthorized session renewal. |
+| **Role-Based Access Control** | Enforced at filter chain via `hasAnyRole('USER', 'ADMIN')` and `hasRole('ADMIN')`. | Strict privilege boundary enforcement; prevents horizontal and vertical privilege escalation. |
+| **Session Revocation on Reset** | Purges all refresh tokens for the user in `completePasswordReset()` (commit `1e27b90`). | Instantly terminates active sessions across all devices upon password change. |
+| **Session Revocation on Logout** | `POST /api/auth/logout` deletes active refresh token and clears `SecurityContextHolder`. | Prevents subsequent token renewals post-logout. |
+| **Anti-Enumeration Protections** | Uniform error responses for invalid credentials and password reset requests. | Prevents attackers from discovering registered email addresses. |
+| **BCrypt Password Hashing** | Salted and hashed with workload factor 10 before database persistence. | Resilient against rainbow table and brute-force attacks. |
+| **Portfolio Verification Mode** | Registration tokens safely provided in response during `APP_PORTFOLIO_MODE=true`. | Fully verifiable live demo without card-gated third-party transactional email dependencies. |
+
+---
+
+## 📸 Actual Application Screenshots
+
+All screenshots below were captured directly from the live production deployment on Render (`https://user-authentication-system-y5l5.onrender.com/`). All sensitive credential inputs, access tokens, and refresh tokens are masked.
 
 ### 1. Security Architecture & System Pipeline Overview
 ![Architecture Overview](docs/screenshots/01_architecture_overview.png)
@@ -53,7 +103,7 @@ A full 5.5-minute technical walkthrough video (`jwt-authentication-system-demo.m
 | ![Token Rotation](docs/screenshots/06_refresh_token_rotation.png) | ![Password Recovery](docs/screenshots/07_password_recovery.png) |
 | *Refresh token rotates on each exchange; old tokens are purged.* | *Password recovery dispatches time-limited tokens with uniform responses.* |
 
-### 6. System Health Monitoring & Responsive View
+### 6. System Health Monitoring & Responsive Mobile View
 | Cloud Health Endpoint (`/api/health`) | Mobile Responsive Layout (390×844) |
 | :---: | :---: |
 | ![System Health](docs/screenshots/08_system_health.png) | ![Mobile Responsive](docs/screenshots/09_mobile_responsive_overview.png) |
@@ -61,35 +111,21 @@ A full 5.5-minute technical walkthrough video (`jwt-authentication-system-demo.m
 
 ---
 
-## 🛡️ Key Authentication & Security Features
-
-1. **Stateless JWT Access Tokens:** 15-minute lifespan (`900,000 ms`), cryptographically signed using HMAC-SHA256 (`Keys.hmacShaKeyFor`) with a mandatory 256-bit secret.
-2. **Dynamic Refresh-Token Rotation:** Refresh tokens expire in 30 days and are stored in PostgreSQL. Exchanging a refresh token generates a new token pair while deleting the old refresh token from the database.
-3. **Replay Attack Protection:** Replaying an already-consumed refresh token returns HTTP `401 Unauthorized` because the token record was purged during the initial rotation.
-4. **Hierarchical RBAC Authorization:** Enforced via Spring Security's `authorizeHttpRequests` DSL. Endpoints under `/api/user/**` require `ROLE_USER` or `ROLE_ADMIN`; `/api/admin/**` requires `ROLE_ADMIN`.
-5. **Session Revocation on Password Reset:** Completed in commit `1e27b90`. Resetting a password immediately purges all active refresh tokens for that user from the database, invalidating persistent sessions across all devices.
-6. **Session Revocation on Logout:** Calling `POST /api/auth/logout` deletes the authenticated user's refresh token from PostgreSQL and clears the Spring Security context.
-7. **Anti-Enumeration Protections:**
-   - Login attempts with nonexistent accounts or incorrect passwords return identical `InvalidCredentialsException` (HTTP 401).
-   - Password reset requests return identical success messages regardless of whether the submitted email address exists.
-8. **BCrypt Password Encryption:** Passwords are never stored in plaintext; salted and hashed using BCrypt (workload factor 10).
-9. **Portfolio Mode Verification:** Newly registered accounts receive their verification token directly in the registration response during portfolio demonstration mode (`APP_PORTFOLIO_MODE=true`), eliminating dependencies on card-gated transactional email APIs while keeping password-reset tokens strictly private.
-
----
-
 ## 🏗️ Technology Stack
 
-| Layer | Technology | Details |
-| :--- | :--- | :--- |
-| **Language & Runtime** | Java 21 LTS | Eclipse Temurin 21 Alpine container base |
-| **Framework** | Spring Boot 3.4.1 | Web, Security, Data JPA, Validation |
-| **Security Engine** | Spring Security 6.4.2 | Filter chain, SecurityContextHolder, BCrypt |
-| **Token Standard** | JJWT (`io.jsonwebtoken 0.11.5`) | HMAC-SHA256 signed access tokens |
-| **Persistent Database** | PostgreSQL 16 (Neon Serverless) | SSL required (`sslmode=require`), connection pooling via HikariCP |
-| **Testing Database** | H2 In-Memory Database | Isolated profile for automated regression test runs |
-| **Containerization** | Docker Multi-Stage | Builder: Temurin 21 JDK; Runtime: Temurin 21 JRE Alpine |
-| **Hosting Platform** | Render Free Web Service | Oregon region, automatic continuous deployment from `main` |
-| **Automated Testing** | JUnit 5 + Mockito + TestRestTemplate | 25 automated unit and end-to-end integration tests |
+| Component | Technology | Version | Purpose |
+| :--- | :--- | :---: | :--- |
+| **Language & Runtime** | Java (OpenJDK) | 21 LTS | Enterprise long-term-support runtime |
+| **Core Framework** | Spring Boot | 3.4.1 | Auto-configuration, dependency injection, and REST controllers |
+| **Security Framework** | Spring Security | 6.4.2 | Filter chain, SecurityContext management, authorization rules |
+| **JWT Library** | JJWT (`io.jsonwebtoken`) | 0.11.5 | Cryptographic HMAC-SHA256 signing and claims parsing |
+| **Password Encoder** | BCrypt | (Factor 10) | Salted, irreversible password hash generation |
+| **Persistence Layer** | Spring Data JPA / Hibernate | 6.6.4 | ORM mapping and entity lifecycle management |
+| **Primary Database** | Neon Serverless PostgreSQL | 16 | Persistent relational storage with SSL enforcement |
+| **In-Memory Database** | H2 Database | 2.4.240 | Isolated test database for fast regression test execution |
+| **Containerization** | Docker | Multi-Stage | Hardened Alpine Linux builder and runtime images |
+| **Cloud Hosting** | Render Web Services | Free Tier | Dockerized web service in Oregon region |
+| **Automated Testing** | JUnit 5 + Mockito | 5.11.4 | 25 automated unit and end-to-end integration tests |
 
 ---
 
@@ -141,7 +177,7 @@ A full 5.5-minute technical walkthrough video (`jwt-authentication-system-demo.m
 
 ---
 
-## 🔄 Authentication & Refresh-Token Rotation Flow
+## 🔄 JWT Authentication Workflow
 
 ```
 Client                              Backend (Spring Boot)                      Neon PostgreSQL
@@ -178,13 +214,54 @@ Client                              Backend (Spring Boot)                      N
 
 ---
 
-## 📋 REST API Reference
+## 👥 Role-Based Access Control (RBAC)
+
+Authorization is enforced at both the HTTP request filter chain and method level:
+
+- **Anonymous Public Access (`permitAll()`):**
+  - `/api/auth/**` — Registration, account verification, login, refresh, password reset.
+  - `/api/health` — Cloud health check probe.
+  - `/`, `/index.html`, `/static/**` — Embedded demonstration interface.
+- **User Role Access (`hasAnyRole('USER', 'ADMIN')`):**
+  - `/api/user/**` — User profile retrieval, authenticated user operations.
+- **Admin Role Access (`hasRole('ADMIN')`):**
+  - `/api/admin/**` — Administrative dashboards and system statistics. Standard users authenticated with `ROLE_USER` receive HTTP `403 Forbidden`.
+
+---
+
+## 🔁 Refresh-Token Rotation & Replay Protection
+
+To mitigate refresh token theft:
+1. **Single-Use Enforcement:** When a client exchanges an active refresh token via `POST /api/auth/refresh`, the server deletes that token from PostgreSQL in the same transaction before inserting a newly generated UUID refresh token.
+2. **Replay Detection:** If a malicious actor intercepts and attempts to use a previously consumed refresh token, the server finds no matching record in `refresh_tokens` and responds with HTTP `401 Unauthorized` (`"Invalid refresh token."`).
+3. **Automatic Expiration:** Refresh tokens carry a strict 30-day expiration timestamp (`Instant.now().plus(Duration.ofDays(30))`). Expired tokens are purged from the database on access attempts.
+
+---
+
+## 🔒 Logout & Password-Reset Security
+
+### Session Invalidation on Logout
+Calling `POST /api/auth/logout` with an active Bearer token invokes `UserServiceImpl.logout()`:
+- Looks up the user principal from Spring's `SecurityContextHolder`.
+- Executes `refreshTokenRepository.deleteByUser(user)`, permanently purging the user's refresh token from PostgreSQL.
+- Clears the security context via `SecurityContextHolder.clearContext()`.
+- Future calls to `POST /api/auth/refresh` fail with HTTP 401, terminating session renewal.
+
+### Session Invalidation on Password Reset (Commit `1e27b90`)
+Resetting a password invalidates existing sessions across all browsers:
+- Cryptographic reset token generated with a strict **1-hour expiration window**.
+- Single-use consumption: upon setting a new password, the reset token and expiry are set to `null`.
+- **Instant Refresh Token Purge:** In `completePasswordReset()`, `refreshTokenRepository.deleteByUser(user)` is executed, immediately revoking all refresh tokens for that account so compromised devices cannot mint new access tokens.
+
+---
+
+## 📋 REST API Endpoint Documentation
 
 ### Public Authentication Endpoints (`/api/auth/**`)
 
 | Method | Endpoint | Request Body | Response Status | Purpose |
 | :--- | :--- | :--- | :---: | :--- |
-| `POST` | `/api/auth/register` | `{"email": "...", "password": "..."}` | `201 Created` | Register new user; persists BCrypt hash and issues verification token. |
+| `POST` | `/api/auth/register` | `{"email": "...", "password": "..."}` | `201 Created` | Register new user; hashes password via BCrypt and issues verification token. |
 | `GET` | `/api/auth/verify-email` | Query parameter: `?token=...` | `200 OK` | Verifies email and enables account login. |
 | `POST` | `/api/auth/login` | `{"email": "...", "password": "..."}` | `200 OK` | Authenticates user; returns 15-min JWT and 30-day refresh token. |
 | `POST` | `/api/auth/refresh` | `{"refreshToken": "..."}` | `200 OK` / `401 Unauthorized` | Rotates refresh token and issues new JWT; invalidates previous refresh token. |
@@ -202,9 +279,9 @@ Client                              Backend (Spring Boot)                      N
 
 ---
 
-## 🗄️ Database Architecture
+## 🗄️ PostgreSQL Database Architecture
 
-The application uses Hibernate DDL validation and update against a dedicated Neon PostgreSQL database.
+The schema is maintained in a dedicated **Neon Serverless PostgreSQL** database with SSL connection enforcement:
 
 ```sql
 -- Core users table
@@ -238,9 +315,9 @@ CREATE TABLE refresh_tokens (
 
 ---
 
-## 🧪 Automated Test Suite (25 / 25 Passing)
+## 🧪 Automated Testing Results (25 / 25 Passing)
 
-Every build compiles and executes unit and integration test suites via Maven (`mvn clean test`):
+Every Maven build compiles and validates the entire test suite (`.\mvnw.cmd clean test`):
 
 ```
 [INFO] -------------------------------------------------------
@@ -258,65 +335,56 @@ Every build compiles and executes unit and integration test suites via Maven (`m
 [INFO] ------------------------------------------------------------------------
 ```
 
-### Test Suite Highlights
-- **`RegistrationFlowIntegrationTest` (15 end-to-end tests):**
-  1. Registration token generation and isolation.
-  2. Account login lockout prior to activation (HTTP 403).
-  3. Account activation unlocking login capability.
-  4. Single-use activation token reuse rejection (HTTP 400).
-  5. Login issuing valid JWT access and refresh tokens.
-  6. Dynamic refresh-token rotation producing successor tokens.
-  7. Replay attack rejection when submitting consumed refresh tokens (HTTP 401).
-  8. Logout session invalidation preventing further refreshes (HTTP 401).
-  9. Password reset token generation with 1-hour expiry.
-  10. Rejection of invalid and expired reset tokens (HTTP 400).
-  11. Successful password override with single-use token consumption.
-  12. Rejection of old password and acceptance of new password on login.
-  13. Password reset revoking prior refresh tokens across all sessions.
-  14. Access token signature and malformed token rejection.
-  15. Stateless access token mathematical validity until expiration.
-- **`UserServiceTest` (10 unit tests):**
-  - Duplicate email collision handling (`DuplicateEmailException`).
-  - BCrypt password mismatch handling (`InvalidCredentialsException`).
-  - Anti-enumeration silent ignores on nonexistent password reset requests.
+### Coverage Breakdown
+- **`RegistrationFlowIntegrationTest` (15 End-to-End Tests):**
+  1. `testRegistrationProvidesIsolatedActivationToken` — Isolated token issuance in portfolio mode.
+  2. `testLoginBlockedBeforeActivation` — Lockout enforcement prior to email verification (HTTP 403).
+  3. `testActivationUnlocksAccount` — Account verification enables login capability.
+  4. `testReusingVerificationTokenFails` — Single-use verification token cleared after use (HTTP 400).
+  5. `testLoginSucceedsAfterActivation` — Login issues valid 15-min JWT and 30-day refresh token.
+  6. `testTokenRefreshRotation` — Exchanging refresh token issues a brand new rotated token.
+  7. `testReplayingRotatedTokenRejected` — Replaying a consumed refresh token is rejected (HTTP 401).
+  8. `testLogoutRevocation` — Logging out purges refresh token; subsequent refreshes fail (HTTP 401).
+  9. `testPasswordResetTokenGenerationAndExpiry` — Generates UUID reset token with 1-hour expiry.
+  10. `testPasswordResetRejectsInvalidAndExpiredTokens` — Expired and malformed tokens fail (HTTP 400).
+  11. `testPasswordResetSuccessAndSingleUse` — Password override clears reset token to prevent reuse.
+  12. `testOldPasswordRejectedAndNewPasswordWorks` — Old password fails; new password authenticates.
+  13. `testPasswordResetRevokesPriorRefreshTokens` — Password reset revokes active refresh tokens.
+  14. `testAccessTokenExpirationEnforced` — Expired, empty, or tampered JWTs return `isTokenValid() == false`.
+  15. `testStatelessAccessTokenValidityUntilExpiry` — Confirms access token validity until expiration.
+- **`UserServiceTest` (10 Unit Tests):**
+  - Registration uniqueness and `DuplicateEmailException`.
+  - BCrypt credential verification and `InvalidCredentialsException`.
+  - User enumeration prevention on password reset requests.
   - Refresh token deletion verification on logout and password reset.
 
 ---
 
-## ⚖️ Known Limitations & Honest Architectural Trade-Offs
-
-1. **Stateless Access Token Window Post-Logout:** In a strictly stateless JWT architecture without a server-side Redis token blacklist, an access JWT remains cryptographically valid until its 15-minute expiration timestamp is reached. Calling `/api/auth/logout` revokes the persistent **refresh token** in PostgreSQL, preventing any new access tokens from being minted, but does not retroactively invalidate the current 15-minute bearer token. Introducing a server-side blacklist introduces database overhead to every API request, defeating the performance benefit of stateless JWTs.
-2. **Demonstration Email Channel:** Because transactional SMTP services (e.g., SendGrid, Mailgun) require domain DNS ownership or payment card verification, emails are simulated via `MockEmailServiceImpl`. In portfolio demonstration mode (`APP_PORTFOLIO_MODE=true`), registration activation tokens are safely exposed to the registrant in the creation response. Password reset tokens remain strictly private in logs and responses to prevent account takeovers.
-3. **Architecture Scope:** This system is intentionally implemented as a robust Spring Boot monolithic REST API with an embedded interactive dashboard, rather than a distributed microservices cluster, making it cost-free, easily testable, and completely self-contained.
-
----
-
-## 💻 Local Setup & Development
+## 💻 Local Development Instructions
 
 ### Prerequisites
-- Java 21 LTS (`jdk-21`)
-- Maven 3.9+ (or use bundled `./mvnw`)
-- Git
+- **Java 21 LTS** (`jdk-21`)
+- **Maven 3.9+** (or bundled `./mvnw`)
+- **Git**
 
-### 1. Clone the Repository
+### 1. Clone & Configure
 ```bash
 git clone https://github.com/saipranav22-commits/user-authentication-system.git
 cd user-authentication-system
 ```
 
-### 2. Configure Environment Variables
-Create a local `.env` file (or set environment variables in your shell):
+Create a local `.env` file (or set environment variables):
 ```bash
-# JWT Configuration (Mandatory: minimum 32 characters / 256 bits)
+# Mandatory 256-bit signing key (minimum 32 characters)
 JWT_SECRET=your-secure-random-256-bit-secret-key-at-least-32-chars-long
 JWT_EXPIRATION_MS=900000
 
-# Spring Active Profile (h2 for local in-memory, prod for PostgreSQL)
+# Active profile: h2 for local in-memory, prod for PostgreSQL
 SPRING_PROFILES_ACTIVE=h2
 APP_PORTFOLIO_MODE=true
 ```
 
-### 3. Run the Automated Tests
+### 2. Run Automated Tests
 ```bash
 # Windows
 .\mvnw.cmd clean test
@@ -326,7 +394,7 @@ chmod +x ./mvnw
 ./mvnw clean test
 ```
 
-### 4. Run the Application Locally
+### 3. Run the Application Locally
 ```bash
 # Windows
 .\mvnw.cmd spring-boot:run
@@ -334,13 +402,14 @@ chmod +x ./mvnw
 # Linux / macOS
 ./mvnw spring-boot:run
 ```
-The application will launch at `http://localhost:8080/`. Open your browser to access the interactive demonstration dashboard.
+Open your browser to `http://localhost:8080/` to explore the interactive demonstration dashboard.
 
 ---
 
-## 🐳 Docker Deployment
+## 🐳 Docker & Render Deployment Architecture
 
-The application includes a hardened multi-stage `Dockerfile`:
+### Multi-Stage Dockerfile
+The application uses a secure multi-stage build to minimize image size and eliminate build tool dependencies from production:
 
 ```dockerfile
 # Stage 1: Build JAR using Temurin 21 JDK
@@ -371,31 +440,44 @@ docker run -p 8080:8080 \
   user-authentication-system
 ```
 
+### Cloud Architecture Highlights (Render + Neon)
+- **Zero Cost:** 100% hosted on genuinely free tiers with zero credit card exposure.
+- **HTTPS Enforcement:** Automatic TLS/SSL certificate termination managed by Render.
+- **Database Security:** Dedicated Neon PostgreSQL instance enforcing SSL (`sslmode=require`).
+- **Health Orchestration:** Render monitors `/api/health` for automatic zero-downtime restarts.
+- **Environment Isolation:** Zero credentials in source control; all connection parameters, database credentials, and signing secrets are injected via cloud environment variables.
+
 ---
 
-## 🚀 Cloud Production Deployment (Render + Neon)
+## 🛠️ Engineering Challenges & Solutions
 
-This project is deployed on **Render Free Web Services** connected to a **Neon Serverless PostgreSQL** database.
+1. **Defeating Refresh Token Replay Attacks in a Stateless System:**
+   - *Problem:* In pure JWT setups, if a refresh token is copied from client storage, an attacker can generate access tokens indefinitely.
+   - *Solution:* Implemented dynamic rotation. In `refreshAccessToken()`, the incoming refresh token is immediately deleted from PostgreSQL and flushed before persisting the new token. Any attempt to replay the old token results in an immediate HTTP `401 Unauthorized`.
+2. **Session Revocation Across Devices on Password Reset:**
+   - *Problem:* Resetting a password updated the BCrypt hash but left existing refresh tokens active in the database, allowing compromised sessions to persist.
+   - *Solution:* Updated `UserServiceImpl.completePasswordReset()` (commit `1e27b90`) to execute `refreshTokenRepository.deleteByUser(user)`, purging all persistent tokens and terminating sessions across all devices.
+3. **Card-Free Cloud Verification Architecture:**
+   - *Problem:* Modern transactional email services (SendGrid, Mailgun) require domain DNS ownership or payment card verification, conflicting with a zero-budget deployment.
+   - *Solution:* Engineered an isolated portfolio verification mode (`APP_PORTFOLIO_MODE=true`). Newly registered users receive their activation token directly in the registration response for immediate verification, while password reset tokens remain strictly private in logs to prevent account enumeration.
+4. **POSIX Line Endings on Windows & Docker Builder:**
+   - *Problem:* Building the Alpine Linux Docker image on Render failed because the Unix Maven wrapper (`mvnw`) was missing POSIX executable permissions.
+   - *Solution:* Generated a standard POSIX `mvnw` with LF line endings and executable mode `100755` (`git update-index --chmod=+x mvnw`), committed directly to source control.
 
-### Cloud Architecture Highlights:
-- **Build Target:** Native Docker container built directly from `main` branch.
-- **HTTPS Enforcement:** Automatic TLS/SSL termination by Render.
-- **Database Connection:** Neon PostgreSQL with SSL enforced (`sslmode=require`).
-- **Health Check Path:** `/api/health` monitored by Render's health orchestrator.
-- **Secrets Management:** Injected exclusively via Render Cloud Environment Variables:
-  - `SPRING_DATASOURCE_URL`: Encrypted JDBC connection string with SSL parameters.
-  - `SPRING_DATASOURCE_USERNAME`: Managed database user.
-  - `SPRING_DATASOURCE_PASSWORD`: Managed database password.
-  - `JWT_SECRET`: 256-bit cryptographically random key.
-  - `APP_PORTFOLIO_MODE`: `true`.
-  - `SPRING_PROFILES_ACTIVE`: `prod`.
+---
+
+## ⚖️ Known Limitations & Honest Architectural Trade-Offs
+
+1. **Stateless Access Token Lifetime Post-Logout:** In a strictly stateless JWT architecture without a server-side Redis token blacklist, an access JWT remains cryptographically valid until its 15-minute expiration timestamp is reached. Calling `/api/auth/logout` immediately revokes the **refresh token** in PostgreSQL (preventing any new tokens from being minted), but does not retroactively invalidate the current 15-minute bearer token. Introducing a database lookup for every micro-request would eliminate the performance benefit of stateless JWTs.
+2. **Portfolio Email Delivery:** Actual email transmission is mocked via `MockEmailServiceImpl`. In portfolio demonstration mode (`APP_PORTFOLIO_MODE=true`), registration activation tokens are safely exposed to the registrant in the creation response. Password reset tokens remain strictly private to protect against account enumeration.
+3. **Architecture Scope:** This system is intentionally implemented as a robust Spring Boot monolithic REST API with an embedded interactive dashboard, rather than a distributed microservices cluster, making it cost-free, easily testable, and completely self-contained.
 
 ---
 
 ## 🔮 Future Improvements
 
-1. **Redis Token Revocation List:** For enterprise deployments requiring instant access token revocation, implement a distributed Redis cluster storing invalidated JWT JTI (JWT ID) claims with automatic TTL.
-2. **OAuth2 / Social Login Integration:** Add Spring Security OAuth2 Client for Google and GitHub sign-in alongside username/password authentication.
+1. **Redis Token Revocation List:** For enterprise deployments requiring instant access token revocation, implement a distributed Redis cluster storing invalidated JWT JTI (JWT ID) claims with automatic TTL matching the 15-minute token lifespan.
+2. **OAuth2 / Social Login Integration:** Add Spring Security OAuth2 Client for Google and GitHub sign-in alongside traditional username/password authentication.
 3. **Multi-Factor Authentication (MFA):** Implement TOTP-based 2FA (RFC 6238) using Google Authenticator or hardware security keys (WebAuthn).
 4. **Rate Limiting:** Integrate Bucket4j or cloud API gateways to throttle brute-force authentication and password-reset attempts per IP address.
 
